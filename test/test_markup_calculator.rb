@@ -3,22 +3,31 @@ require 'minitest/autorun'
 require 'markup_calculator'
 
 class TestMarkupCalculator < Minitest::Test
+    def setup
+        @product = MiniTest::Mock.new
+    end
 
     def test_calculator_food
-        prod = Product.new(1299.99, 3, 'food')
-        calculator = MarkupCalculator.new prod
+        @product.expect(:getPrice, 1299.99)
+        @product.expect(:getPeople, 3)
+        @product.expect(:getCategory, 'food')
+        calculator = MarkupCalculator.new @product
         assert_equal 1591.58, calculator.calcCost
     end
 
     def test_calculator_pharm
-        prod = Product.new(5432, 1, 'pharm')
-        calculator = MarkupCalculator.new prod
+        @product.expect(:getPrice, 5432)
+        @product.expect(:getPeople, 1)
+        @product.expect(:getCategory, 'pharm')
+        calculator = MarkupCalculator.new @product
         assert_equal 6199.81, calculator.calcCost
     end
 
     def test_calculator_nill
-        prod = Product.new(12456.95, 4)
-        calculator = MarkupCalculator.new prod
+        @product.expect(:getPrice, 12456.95)
+        @product.expect(:getPeople, 4)
+        @product.expect(:getCategory, 'none')
+        calculator = MarkupCalculator.new @product
         assert_equal 13707.63, calculator.calcCost
     end
 end
