@@ -1,7 +1,7 @@
 ### Getting started:
-This Module provides a simple markup Calculator that can be used to calculate a markup based on product categories and on amount of labourers invloved with the product.
+This Module provides a simple markup calculator that can be used to calculate a markup based on product categories and on amount of labourers involved with the product.
 
-Basic use of the module requires a product object that implements the a particular interface:
+Basic use of the module requires a product object that implements a particular interface:
 ```ruby
     Class Product
         def getPrice
@@ -20,7 +20,7 @@ Basic use of the module requires a product object that implements the a particul
         end
 ```
 
-The Category Object returned by getCategory should implement the following interface:
+The Category Object returned by Product::getCategory() should implement the following interface:
 ```ruby
     Class Category
         def getLabel
