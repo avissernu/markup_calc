@@ -7,43 +7,49 @@ class TestMarkupCalculator < Minitest::Test
         @product = MiniTest::Mock.new
     end
 
+    # Build a mocked up product object, expects to be able to get
+    #  a category object from the product object, mock that as well
     def buildMock price, people, category
-        @product.expect(:getPrice, price)
-        @product.expect(:getPeople, people)
-        category_obj = MiniTest::Mock.new
-        category_obj.expect(:getLabel, category)
-        @product.expect(:getCategory, category_obj)
+        return Class.new {
+            define_method(:getPrice) { return price }
+            define_method(:getPeople) { return people }
+            define_method(:getCategory) {
+                return Class.new { define_method(:getLabel) { return category }}.new
+            }
+        }.new
     end
 
     def test_calculator_food
-        buildMock 1299.99, 3, :food
-        calculator = MarkupCalculator.new @product
-        assert_equal 1591.58, calculator.calcCost
+        mock_product = buildMock 1299.99, 3, :food
+        assert_equal 1591.58, MarkupCalculator.calcCost(mock_product)
     end
 
     def test_calculator_pharm
-        buildMock 5432, 1, :pharmaceuticals
-        calculator = MarkupCalculator.new @product
-        assert_equal 6199.81, calculator.calcCost
+        mock_product = buildMock 5432, 1, :pharmaceuticals
+        assert_equal 6199.81, MarkupCalculator.calcCost(mock_product)
     end
 
     def test_calculator_books
-        buildMock 12456.95, 4, :books
-        calculator = MarkupCalculator.new @product
-        assert_equal 13707.63, calculator.calcCost
+        mock_product = buildMock 12456.95, 4, :books
+        assert_equal 13707.63, MarkupCalculator.calcCost(mock_product)
     end
 
     def test_calculator_precision
-        buildMock 999, 2, :electronics
-        calculator = MarkupCalculator.new @product
-        assert_equal 1095.104, calculator.calcCost(3)
+        mock_product = buildMock 999, 2, :electronics
+        assert_equal 1095.104, MarkupCalculator.calcCost(mock_product, 3)
     end
 
     def test_calculator_fail
-        #base mock object doesn't have the appropriate methods
-        #  setup so we can pass that and anticipate the exception
         assert_raises (RuntimeError) do
-            calculator = MarkupCalculator.new @product
+            MarkupCalculator.calcCost(Class.new)
+        end
+    end
+
+    def test_calculator_fail_on_label
+        assert_raises (RuntimeError) do
+            MarkupCalculator.calcCost(Class.new {
+                define_method(:getCategory) { return nil }
+            }.new)
         end
     end
 end

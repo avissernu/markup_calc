@@ -7,41 +7,36 @@ class MarkupCalculator
     ]
     BASE_MARKUP_RATE = 0.05
     PERSON_MARKUP_RATE = 0.012
-    @base_price = nil
 
-    def initialize product
+    def self.calcCost product, precision=2
         if !product.respond_to?(:getPrice) || !product.respond_to?(:getCategory) || !product.respond_to?(:getPeople)
             raise 'Product object does not implement proper interface'
         end
-        @product = product
-    end
+        orig_price     = product.getPrice
+        category_label = product.getCategory.getLabel
+        people         = product.getPeople
 
-    def calcCost precision=2
-        @base_price = nil #clear local cache, as it's possible the price in @product changed
-        retval = calcBase + calcLabourRate + calcCategoryRate
-        return retval.round(precision)
+        markedup_price = self.calcBase(orig_price) + self.calcLabourRate(orig_price, people) + self.calcCategoryRate(orig_price, category_label)
+        return markedup_price.round(precision)
     end
 
     private
-    def calcBase
-        if @base_price == nil #some local caching, getPrice could be IO intensive
-            orig_price = @product.getPrice
-            @base_price = orig_price + (orig_price * BASE_MARKUP_RATE)
+    def self.calcBase orig_price
+        base_price = orig_price + (orig_price * BASE_MARKUP_RATE)
+        return base_price
+    end
+
+    private
+    def self.calcLabourRate orig_price, people
+        return (calcBase(orig_price) * PERSON_MARKUP_RATE) * people
+    end
+
+    private
+    def self.calcCategoryRate orig_price, category
+        # if we don't have a specific markup for this product, let's pick 'default'
+        if !CATEGORY_MARKUP_RATES.include?(category)
+            category = :default
         end
-        return @base_price
-    end
-
-    private
-    def calcLabourRate
-        return (calcBase * PERSON_MARKUP_RATE) * @product.getPeople
-    end
-
-    private
-    def calcCategoryRate
-        product_category = @product.getCategory.getLabel
-        if !CATEGORY_MARKUP_RATES.include?(product_category)
-            product_category = :default
-        end
-        return calcBase * CATEGORY_MARKUP_RATES[product_category]
+        return calcBase(orig_price) * CATEGORY_MARKUP_RATES[category]
     end
 end
