@@ -29,9 +29,14 @@ class TestMarkupCalculator < Minitest::Test
         assert_equal 6199.81, MarkupCalculator.calcCost(mock_product)
     end
 
-    def test_calculator_books
+    def test_calculator_books # tests the non-specific markup code path
         mock_product = buildMock 12456.95, 4, :books
         assert_equal 13707.63, MarkupCalculator.calcCost(mock_product)
+    end
+
+    def test_calculator_people_float
+        mock_product = buildMock 1000, 1.9, :books
+        assert_equal 1073.94, MarkupCalculator.calcCost(mock_product)
     end
 
     def test_calculator_precision
@@ -39,13 +44,41 @@ class TestMarkupCalculator < Minitest::Test
         assert_equal 1095.104, MarkupCalculator.calcCost(mock_product, 3)
     end
 
-    def test_calculator_fail
+    def test_calculator_invalid_price
+        mock_product = buildMock "Nine Hundred, Ninety-Nine", 2, :electronics
+        assert_raises (RuntimeError) do
+            MarkupCalculator.calcCost(mock_product)
+        end
+    end
+
+    def test_calculator_invalid_people
+        mock_product = buildMock 999, "two", :electronics
+        assert_raises (RuntimeError) do
+            MarkupCalculator.calcCost(mock_product)
+        end
+    end
+
+    def test_calculator_invalid_precision
+        mock_product = buildMock 999, 2, :electronics
+        assert_raises (RuntimeError) do
+            MarkupCalculator.calcCost(mock_product, 'Three')
+        end
+    end
+
+    def test_calculator_invalid_category
+        mock_product = buildMock 999, 2, 4
+        assert_raises (RuntimeError) do
+            MarkupCalculator.calcCost(mock_product)
+        end
+    end
+
+    def test_calculator_bad_product_object
         assert_raises (RuntimeError) do
             MarkupCalculator.calcCost(Class.new)
         end
     end
 
-    def test_calculator_fail_on_label
+    def test_calculator_bad_category_object
         assert_raises (RuntimeError) do
             MarkupCalculator.calcCost(Class.new {
                 define_method(:getCategory) { return nil }

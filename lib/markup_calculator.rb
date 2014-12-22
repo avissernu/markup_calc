@@ -1,3 +1,7 @@
+# This library expects a product object implementing a specific interface
+# it performs a markup calculation based on price, category and number of
+# people involved with the product
+
 class MarkupCalculator
     CATEGORY_MARKUP_RATES = Hash[
         :pharmaceuticals => 0.075,
@@ -9,15 +13,31 @@ class MarkupCalculator
     PERSON_MARKUP_RATE = 0.012
 
     def self.calcCost product, precision=2
-        if !product.respond_to?(:getPrice) || !product.respond_to?(:getCategory) || !product.respond_to?(:getPeople)
-            raise 'Product object does not implement proper interface'
+        self.validateInputObject product
+        begin
+            orig_price     = Float(product.getPrice)
+            people         = Float(product.getPeople)
+            precision      = Integer(precision)
+            category_label = product.getCategory.getLabel
+            if !category_label.is_a? Symbol
+                raise 'label should be a symbol'
+            end
+        rescue
+            raise 'invalid inputs recieved'
         end
-        orig_price     = product.getPrice
-        category_label = product.getCategory.getLabel
-        people         = product.getPeople
 
         markedup_price = self.calcBase(orig_price) + self.calcLabourRate(orig_price, people) + self.calcCategoryRate(orig_price, category_label)
         return markedup_price.round(precision)
+    end
+
+    private
+    def self.validateInputObject product
+        if !product.respond_to?(:getPrice) || !product.respond_to?(:getCategory) || !product.respond_to?(:getPeople)
+            raise 'Product object does not implement proper interface'
+        end
+        if !product.getCategory.respond_to?(:getLabel)
+            raise 'Category object does not implement proper interface'
+        end
     end
 
     private
